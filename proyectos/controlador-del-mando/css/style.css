@@ -10,6 +10,14 @@
     flex-wrap: wrap;
 }
 
+.contenedor,
+.superior,
+.medio,
+.inferior {
+    display: flex;
+    gap: 10px;
+}
+
 button {
     width: 70px;
     background-color: #008184;
@@ -17,12 +25,4 @@ button {
     border-radius: 10px;
     padding: 10px;
     border: 3px solid black;
-}
-
-.contenedor,
-.superior,
-.medio,
-.inferior {
-    display: flex;
-    gap: 10px;
 }
