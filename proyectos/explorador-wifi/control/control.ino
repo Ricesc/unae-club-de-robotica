@@ -292,20 +292,37 @@ void loop() {
             const NIVEL_VELOCIDAD = document.getElementById('velocidad-value');
             let currentSpeed = VELOCIDAD_RANGE.value;
 
+            // Comando de stop y variables de control
+            const STOP_COMMAND = 'e';
+            let lastCommand = '';
+            let stopTimeout;
+            const STOP_DELAY = 300; // Tiempo para enviar el stop tras la última acción
+
             // Función para enviar un comando
             function sendCommand(command) {
-                fetch(`./?var=${command}&velocidad=${currentSpeed}`)
-                    .then((response) =>
-                        console.log(
-                            'Comando enviado:',
-                            command,
-                            'velocidad:',
-                            currentSpeed
+                if (command !== lastCommand) {
+                    fetch(`./?var=${command}&velocidad=${currentSpeed}`)
+                        .then((response) =>
+                            console.log(
+                                'Comando enviado:',
+                                command,
+                                'velocidad:',
+                                currentSpeed
+                            )
                         )
-                    )
-                    .catch((error) =>
-                        console.error('Error al enviar comando:', error)
-                    );
+                        .catch((error) =>
+                            console.error('Error al enviar comando:', error)
+                        );
+                    lastCommand = command; // Actualiza el último comando enviado
+                }
+            }
+
+            // Función que envía el comando de stop después del intervalo
+            function scheduleStop() {
+                clearTimeout(stopTimeout); // Cancela cualquier timeout anterior
+                stopTimeout = setTimeout(() => {
+                    sendCommand(STOP_COMMAND); // Enviar el stop después de STOP_DELAY
+                }, STOP_DELAY);
             }
 
             // Manejar la pulsación de teclas
@@ -322,7 +339,7 @@ void loop() {
                 const button = buttons[event.code];
                 if (button) {
                     button.classList.remove('active');
-                    sendCommand('e'); // Enviar comando de stop ('e') al soltar
+                    sendCommand(STOP_COMMAND); // Enviar comando de stop al soltar
                 }
             }
 
@@ -336,7 +353,7 @@ void loop() {
             function handleMouseUp(event) {
                 const button = event.currentTarget;
                 button.classList.remove('active');
-                sendCommand('e'); // Enviar comando de stop ('e') al soltar
+                sendCommand(STOP_COMMAND); // Enviar comando de stop al soltar
             }
 
             // Asignar eventos de teclado
@@ -359,47 +376,14 @@ void loop() {
             ON_BTN.addEventListener('mousedown', () => sendCommand('on'));
             OFF_BTN.addEventListener('mousedown', () => sendCommand('off'));
 
-            // Actualizar el nivel de velocidad al cambiar el rango
-            VELOCIDAD_RANGE.addEventListener('input', function (e) {
-                currentSpeed = e.target.value;
-                NIVEL_VELOCIDAD.textContent = currentSpeed;
-            });
-        </script>
-
-        <script>
-            // Comando de stop y control del último comando enviado
-            const STOP_COMMAND = 'e';
-            let lastCommand = '';
-            let lastMoveTime = Date.now();
-            let stopTimeout;
-            const STOP_DELAY = 200; // Tiempo de espera antes de enviar el comando de stop
-
-            // Función para enviar un comando solo si es distinto al último
-            function sendCommand(command) {
-                if (command !== lastCommand) {
-                    fetch(`./?var=${command}&velocidad=${currentSpeed}`)
-                        .then((response) =>
-                            console.log(
-                                'Comando enviado:',
-                                command,
-                                'velocidad:',
-                                currentSpeed
-                            )
-                        )
-                        .catch((error) =>
-                            console.error('Error al enviar comando:', error)
-                        );
-                    lastCommand = command; // Actualiza el último comando enviado
-                }
-            }
-
-            // Mapeo del movimiento del joystick a comandos de dirección
+            // Función para mapear valores del joystick a comandos de dirección
             function getGamepadDirection(gamepad) {
-                const THRESHOLD = 0.5; // Umbral de sensibilidad para el joystick
+                const THRESHOLD = 0.5; // Umbral para considerar el movimiento
+
                 const axisX = gamepad.axes[0]; // Eje X (Izquierda/Derecha)
                 const axisY = gamepad.axes[1]; // Eje Y (Arriba/Abajo)
 
-                // Determinar dirección en función de los ejes del joystick
+                // Determinar dirección basada en los ejes
                 if (axisY < -THRESHOLD) {
                     return 'a'; // Avanzar
                 } else if (axisY > THRESHOLD) {
@@ -413,29 +397,17 @@ void loop() {
                 }
             }
 
-            // Actualizar el estado del gamepad en cada cuadro de animación
+            // Función principal para actualizar el estado del gamepad
             function updateGamepad() {
                 const gamepads = navigator.getGamepads();
                 if (gamepads[0]) {
                     const gamepad = gamepads[0];
                     const direction = getGamepadDirection(gamepad);
 
+                    // Si se detecta un movimiento, enviar el comando de dirección y reiniciar el temporizador de stop
                     if (direction !== STOP_COMMAND) {
-                        // Si hay movimiento en el joystick, se envía el comando de dirección
                         sendCommand(direction);
-                        lastMoveTime = Date.now(); // Actualizamos el último tiempo de movimiento
-                        clearTimeout(stopTimeout); // Cancelamos cualquier timeout pendiente de stop
-                    } else {
-                        // Si no hay movimiento, verificamos si es momento de enviar stop
-                        const timeSinceLastMove = Date.now() - lastMoveTime;
-                        if (timeSinceLastMove > STOP_DELAY) {
-                            sendCommand(STOP_COMMAND); // Enviar stop si ha pasado suficiente tiempo
-                        } else {
-                            // Configuramos un timeout para enviar stop después de un tiempo
-                            stopTimeout = setTimeout(() => {
-                                sendCommand(STOP_COMMAND);
-                            }, STOP_DELAY - timeSinceLastMove);
-                        }
+                        scheduleStop(); // Programar el stop después de un periodo de inactividad
                     }
                 }
 
@@ -453,7 +425,7 @@ void loop() {
                 console.log('Gamepad desconectado:', event.gamepad);
             });
 
-            // Actualizar nivel de velocidad
+            // Actualizar el nivel de velocidad al cambiar el rango
             VELOCIDAD_RANGE.addEventListener('input', function (e) {
                 currentSpeed = e.target.value;
                 NIVEL_VELOCIDAD.textContent = currentSpeed;
@@ -461,7 +433,7 @@ void loop() {
         </script>
     </body>
 </html>
-    )");
+)");
     
     delay(1);
     //Serial.println("Respuesta enviada");

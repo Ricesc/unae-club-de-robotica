@@ -4,7 +4,7 @@
 - **Origen:** proyecto del Club de Robótica UNAE.
 - **Tecnología:** Arduino/C++, ESP8266WiFi, SoftwareSerial, Servo, HTML y JavaScript.
 - **Estado:** prototipo académico; no se verificó la compilación ni el funcionamiento con hardware en esta actualización.
-- **Relacionado:** [interfaz web inicial del mando](../controlador-del-mando/index.html).
+- **Relacionado:** [controlador final del mando](../controlador-del-mando/README.md).
 
 ## Cómo abrirlo
 
@@ -21,4 +21,4 @@ Abre cada archivo en Arduino IDE con la placa y bibliotecas que corresponden a s
 
 `control/control.ino` contiene únicamente los marcadores `TU_RED_WIFI` y `TU_CLAVE_WIFI`, tanto en la configuración activa como en el ejemplo comentado. Configura los valores de tu red solo en tu copia local antes de cargar el firmware. No incluyas esos cambios ni credenciales reales en commits o publicaciones.
 
-La lógica del programa se conserva; los cambios de configuración sustituyen únicamente los valores WiFi por estos marcadores.
+La configuración WiFi usa únicamente estos marcadores. El cuerpo HTML servido por `control.ino` está sincronizado con `../controlador-del-mando/index.html`; se conserva el firmware fuera de ese bloque y el sketch de servos.
